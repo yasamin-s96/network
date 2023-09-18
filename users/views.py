@@ -17,9 +17,9 @@ from rest_framework_simplejwt.token_blacklist.models import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserSerializer
+from .serializers import UserSerializer, PostSerializer
 from .serializers import MyTokenObtainPairSerializer
-from .models import User
+from .models import User, Post
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -51,3 +51,12 @@ class LogoutView(APIView):
             token = RefreshToken(token=refresh_token)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
+
+
+class CreatePostView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+
+    def create(self, serializer):
+        serializer.save(author=self.request.user)
