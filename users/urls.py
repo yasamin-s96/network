@@ -9,4 +9,5 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("register/", views.RegisterView.as_view(), name="register"),
     path("posts/create/", views.CreatePostView.as_view(), name="create_new_post"),
+    path("<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
 ]

@@ -4,6 +4,7 @@ from django.db import models
 
 
 class User(AbstractUser):
+    pk = models.AutoField(primary_key=True)
     fullname = models.CharField(max_length=100)
     last_login = models.DateTimeField(auto_now=True, null=True)
 

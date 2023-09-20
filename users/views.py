@@ -1,14 +1,15 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.http import Http404
 
 from rest_framework.views import View, APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.token_blacklist.models import (
@@ -19,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import UserSerializer, PostSerializer
 from .serializers import MyTokenObtainPairSerializer
-from .models import User, Post
+from .models import User, Post, Follow
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -58,5 +59,25 @@ class CreatePostView(generics.CreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
-    def create(self, serializer):
+    def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class FollowView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return User.objects.get(id=int(pk))
+        except User.DoesNotExist:
+            raise Http404()
+
+    def post(self, request, pk):
+        follower = self.request.user
+        following = self.get_object(pk)
+        if Follow.objects.filter(follower=follower, following=following).exists():
+            return ValidationError(f"already following {following}")
+        new_follow = Follow.objects.create(follower=follower, following=following)
+        return Response(
+            f"{follower} followed {following}", status=status.HTTP_201_CREATED
+        )

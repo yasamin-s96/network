@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers
-from .models import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import *
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -51,15 +51,23 @@ class UserSerializer(serializers.ModelSerializer):
 
         return data
 
+    def create(self, validated_data):
+        user = User.objects.create(**validated_data)
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
+
 
 class FollowSerializer(serializers.ModelSerializer):
+    follower = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Follow
         fields = "__all__"
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    author = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Post
